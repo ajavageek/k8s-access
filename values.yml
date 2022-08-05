@@ -1,0 +1,9 @@
+ingress-controller:
+  enabled: true
+  config:
+    apisix:
+      serviceNamespace: ingress-apisix
+gateway:
+  type: NodePort
+  http:
+    nodePort: 30800
