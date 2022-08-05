@@ -1,18 +1,18 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: nginx
+  name: left
   labels:
-    app: nginx
+    app: left
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
-      app: nginx
+      app: left
   template:
     metadata:
       labels:
-        app: nginx
+        app: left
     spec:
       containers:
       - name: nginx
@@ -25,15 +25,25 @@ spec:
       volumes:
         - name: conf
           configMap:
-            name: nginx-conf
+            name: left-conf
             items:
               - key: nginx.conf
                 path: nginx.conf
 ---
 apiVersion: v1
+kind: Service
+metadata:
+  name: left
+spec:
+  selector:
+    app: left
+  ports:
+    - port: 80
+---
+apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: nginx-conf
+  name: left-conf
 data:
   nginx.conf: |
     events {
@@ -43,18 +53,88 @@ data:
         server {
             location / {
                 default_type text/plain;
-                return 200 "host: $hostname\nIP:   $server_addr\n";
+                return 200 "left\n";
             }
         }
     }
 ---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: right
+  labels:
+    app: right
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: right
+  template:
+    metadata:
+      labels:
+        app: right
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.23
+        volumeMounts:
+          - name: conf
+            mountPath: /etc/nginx/nginx.conf
+            subPath: nginx.conf
+            readOnly: true
+      volumes:
+        - name: conf
+          configMap:
+            name: right-conf
+            items:
+              - key: nginx.conf
+                path: nginx.conf
+---
 apiVersion: v1
 kind: Service
 metadata:
-  name: nginx
+  name: right
 spec:
   selector:
-    app: nginx
-  type: LoadBalancer
+    app: right
   ports:
     - port: 80
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: right-conf
+data:
+  nginx.conf: |
+    events {
+        worker_connections  1024;
+    }
+    http {
+        server {
+            location / {
+                default_type text/plain;
+                return 200 "right\n";
+            }
+        }
+    }
+---
+apiVersion: apisix.apache.org/v2
+kind: ApisixRoute
+metadata:
+  name: apisix-route
+spec:
+  http:
+  - name: left
+    match:
+      paths:
+      - "/left"
+    backends:
+    - serviceName: left
+      servicePort: 80
+  - name: right
+    match:
+      paths:
+        - "/right"
+    backends:
+    - serviceName: right
+      servicePort: 80
