@@ -1,8 +1,9 @@
 ingress-controller:
   enabled: true
   config:
-    apisix:
-      serviceNamespace: ingress-apisix
+    ingressPublishService: "ingress-apisix/apisix-gateway"
+    kubernetes:
+      enableGatewayAPI: true
 gateway:
   type: NodePort
   http:
