@@ -4,6 +4,10 @@ ingress-controller:
   config:
     apisix:
       serviceNamespace: ingress-apisix
+    image:
+      tag: "1.6.1"
+    kubernetes:
+      enableGatewayAPI: true
 gateway:
   type: NodePort
   http:

@@ -117,24 +117,3 @@ data:
             }
         }
     }
----
-apiVersion: apisix.apache.org/v2
-kind: ApisixRoute
-metadata:
-  name: apisix-route
-spec:
-  http:
-  - name: left
-    match:
-      paths:
-      - "/left"
-    backends:
-    - serviceName: left
-      servicePort: 80
-  - name: right
-    match:
-      paths:
-        - "/right"
-    backends:
-    - serviceName: right
-      servicePort: 80
